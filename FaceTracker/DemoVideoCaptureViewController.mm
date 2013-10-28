@@ -18,14 +18,15 @@
 
 // Name of face cascade resource file without xml extension
 NSString * const kFaceCascadeFilename = @"haarcascade_frontalface_alt2";
+NSString * const kEyeCascadeFilename = @"haarcascade_eyes";
 
 // Options for cv::CascadeClassifier::detectMultiScale
 const int kHaarOptions =  CV_HAAR_FIND_BIGGEST_OBJECT | CV_HAAR_DO_ROUGH_SEARCH;
 
 @interface DemoVideoCaptureViewController ()
-- (void)displayFaces:(const std::vector<cv::Rect> &)faces 
-       forVideoRect:(CGRect)rect 
-    videoOrientation:(AVCaptureVideoOrientation)videoOrientation;
+- (CGRect)displayFaces:(const std::vector<cv::Rect> &)faces
+          forVideoRect:(CGRect)rect
+      videoOrientation:(AVCaptureVideoOrientation)videoOrientation;
 @end
 
 @implementation DemoVideoCaptureViewController
@@ -51,6 +52,11 @@ const int kHaarOptions =  CV_HAAR_FIND_BIGGEST_OBJECT | CV_HAAR_DO_ROUGH_SEARCH;
     
     if (!_faceCascade.load([faceCascadePath UTF8String])) {
         NSLog(@"Could not load face cascade: %@", faceCascadePath);
+    }
+    
+    NSString * eyeCascadePath = [[NSBundle mainBundle] pathForResource:kEyeCascadeFilename ofType:@"xml"];
+    if (!_eyeCascade.load([eyeCascadePath UTF8String])) {
+        NSLog(@"Could not load eye cascade: %@", eyeCascadePath);
     }
 }
 
@@ -122,22 +128,32 @@ const int kHaarOptions =  CV_HAAR_FIND_BIGGEST_OBJECT | CV_HAAR_DO_ROUGH_SEARCH;
     
     // Detect faces
     std::vector<cv::Rect> faces;
+    std::vector<cv::Rect> eyes;
     
     _faceCascade.detectMultiScale(mat, faces, 1.1, 2, kHaarOptions, cv::Size(60, 60));
+    _eyeCascade.detectMultiScale(mat, eyes, 1.1, 2, CV_HAAR_DO_CANNY_PRUNING, cv::Size(20, 20));
     
     // Dispatch updating of face markers to main queue
     dispatch_sync(dispatch_get_main_queue(), ^{
-        [self displayFaces:faces
+        
+        CGRect faceRect = [self displayFaces:faces
+                                forVideoRect:rect
+                            videoOrientation:videOrientation];
+        
+        [self displayEyes:eyes
              forVideoRect:rect
-          videoOrientation:videOrientation];    
+                 faceRect:faceRect
+         videoOrientation:videOrientation];
     });
 }
 
 // Update face markers given vector of face rectangles
-- (void)displayFaces:(const std::vector<cv::Rect> &)faces 
-       forVideoRect:(CGRect)rect 
-    videoOrientation:(AVCaptureVideoOrientation)videoOrientation
+- (CGRect)displayFaces:(const std::vector<cv::Rect> &)faces
+          forVideoRect:(CGRect)rect
+      videoOrientation:(AVCaptureVideoOrientation)videoOrientation
 {
+    CGRect retFaceRect = CGRectZero;
+    
     NSArray *sublayers = [NSArray arrayWithArray:[self.view.layer sublayers]];
     int sublayersCount = [sublayers count];
     int currentSublayer = 0;
@@ -186,9 +202,88 @@ const int kHaarOptions =  CV_HAAR_FIND_BIGGEST_OBJECT | CV_HAAR_DO_ROUGH_SEARCH;
 		}
         
         featureLayer.frame = faceRect;
+        
+        retFaceRect = faceRect;
+    }
+    
+    [CATransaction commit];
+    
+    return retFaceRect;
+}
+
+// Update eye markers given vector of eye rectangles
+- (void)displayEyes:(const std::vector<cv::Rect> &)eyes
+       forVideoRect:(CGRect)rect
+           faceRect:(CGRect)faceRect
+   videoOrientation:(AVCaptureVideoOrientation)videoOrientation
+{
+    NSArray *sublayers = [NSArray arrayWithArray:[self.view.layer sublayers]];
+    int sublayersCount = [sublayers count];
+    int currentSublayer = 0;
+    
+	[CATransaction begin];
+	[CATransaction setValue:(id)kCFBooleanTrue forKey:kCATransactionDisableActions];
+	
+	// hide all the face layers
+	for (CALayer *layer in sublayers) {
+        NSString *layerName = [layer name];
+		if ([layerName isEqualToString:@"EyeLayer"])
+			[layer setHidden:YES];
+	}
+    
+    // Create transform to convert from vide frame coordinate space to view coordinate space
+    CGAffineTransform t = [self affineTransformForVideoFrame:rect orientation:videoOrientation];
+
+    NSLog(@"===== eyes count=%lu", eyes.size());
+    int displayedCnt = 0;
+
+    for (int i = 0; i < eyes.size(); i++) {
+
+        if (displayedCnt >= 2) {
+            break;
+        }
+        
+        CGRect eyeRect;
+        eyeRect.origin.x = eyes[i].x;
+        eyeRect.origin.y = eyes[i].y;
+        eyeRect.size.width = eyes[i].width;
+        eyeRect.size.height = eyes[i].height;
+        
+        eyeRect = CGRectApplyAffineTransform(eyeRect, t);
+        
+        if (!CGRectContainsRect(faceRect, eyeRect)) {
+            continue;
+        }
+
+        ++displayedCnt;
+        
+        CALayer *featureLayer = nil;
+        
+        while (!featureLayer && (currentSublayer < sublayersCount)) {
+			CALayer *currentLayer = [sublayers objectAtIndex:currentSublayer++];
+			if ([[currentLayer name] isEqualToString:@"EyeLayer"]) {
+				featureLayer = currentLayer;
+				[currentLayer setHidden:NO];
+			}
+		}
+        
+        if (!featureLayer) {
+            // Create a new feature marker layer
+			featureLayer = [[CALayer alloc] init];
+            featureLayer.name = @"EyeLayer";
+            featureLayer.borderColor = [[UIColor blueColor] CGColor];
+            featureLayer.borderWidth = 8.0f;
+			[self.view.layer addSublayer:featureLayer];
+			[featureLayer release];
+		}
+
+        CGPoint center = CGPointMake(CGRectGetMidX(eyeRect), CGRectGetMidY(eyeRect));
+        CGRect centerFrame = CGRectMake(center.x-8, center.y-8, 16, 16);
+        featureLayer.frame = centerFrame;
     }
     
     [CATransaction commit];
 }
+
 
 @end

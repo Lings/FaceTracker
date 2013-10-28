@@ -24,6 +24,7 @@
 		00E53783142BE6D600F30526 /* UIImage+OpenCV.mm in Sources */ = {isa = PBXBuildFile; fileRef = 00E53782142BE6D600F30526 /* UIImage+OpenCV.mm */; };
 		00E53787142BFEE600F30526 /* DemoVideoCaptureViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 00E53785142BFEE600F30526 /* DemoVideoCaptureViewController.mm */; };
 		00E53788142BFEE700F30526 /* DemoVideoCaptureViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 00E53786142BFEE600F30526 /* DemoVideoCaptureViewController.xib */; };
+		5AAAE560181E7F5400882289 /* haarcascade_eyes.xml in Resources */ = {isa = PBXBuildFile; fileRef = 5AAAE55F181E7F5400882289 /* haarcascade_eyes.xml */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -52,6 +53,7 @@
 		00E53784142BFEE600F30526 /* DemoVideoCaptureViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DemoVideoCaptureViewController.h; sourceTree = "<group>"; };
 		00E53785142BFEE600F30526 /* DemoVideoCaptureViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DemoVideoCaptureViewController.mm; sourceTree = "<group>"; };
 		00E53786142BFEE600F30526 /* DemoVideoCaptureViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = DemoVideoCaptureViewController.xib; sourceTree = "<group>"; };
+		5AAAE55F181E7F5400882289 /* haarcascade_eyes.xml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = haarcascade_eyes.xml; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -148,6 +150,7 @@
 		00F85B05142D54020099F79C /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				5AAAE55F181E7F5400882289 /* haarcascade_eyes.xml */,
 				000B54FC142FE5370076F5A1 /* haarcascade_frontalface_alt2.xml */,
 			);
 			name = Resources;
@@ -203,6 +206,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5AAAE560181E7F5400882289 /* haarcascade_eyes.xml in Resources */,
 				00427A4E142B956600E5019E /* InfoPlist.strings in Resources */,
 				00E53788142BFEE700F30526 /* DemoVideoCaptureViewController.xib in Resources */,
 				000B54FD142FE5370076F5A1 /* haarcascade_frontalface_alt2.xml in Resources */,

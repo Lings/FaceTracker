@@ -17,6 +17,7 @@
 @interface DemoVideoCaptureViewController : VideoCaptureViewController
 {
     cv::CascadeClassifier _faceCascade;
+    cv::CascadeClassifier _eyeCascade;
 }
 
 - (IBAction)toggleFps:(id)sender;
